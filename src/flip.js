@@ -34,6 +34,7 @@
       forceWidth: false,
       autoSize: true,
       front: '.front',
+      middle: '.middle',
       back: '.back'
     };
 
@@ -72,6 +73,11 @@
       this.setting.front = options.front;
     }
 
+    if (typeof options.middle === 'string' || options.middle instanceof $) {
+      this.setting.middle = options.middle;
+    }
+
+
     if (typeof options.back === 'string' || options.back instanceof $) {
       this.setting.back = options.back;
     }
@@ -79,8 +85,12 @@
     // Other attributes
     this.element = $el;
     this.frontElement = this.getFrontElement();
+    this.middleElement = this.getMiddleElement();
     this.backElement = this.getBackElement();
     this.isFlipped = false;
+    this.pos = 1;
+    this.maxPos = 2;
+    this.minPos = 0;
 
     this.init(callback);
   };
@@ -102,42 +112,76 @@
     },
 
     flip: function(callback) {
-      if (this.isFlipped) {
+      if (this.pos >= this.maxPos) {
         return;
       }
 
       this.isFlipped = true;
-
+      var that = this;
       var rotateAxis = "rotate" + this.setting.axis;
-      this.frontElement.css({
-        transform: rotateAxis + (this.setting.reverse ? "(-180deg)" : "(180deg)"),
-        "z-index": "0"
-      });
-
-      this.backElement.css({
-        transform: rotateAxis + "(0deg)",
-        "z-index": "1"
-      });
+      if (this.pos == 0){
+        this.middleElement.show(0, function(){
+          that.middleElement.css({
+            transform: rotateAxis + "(0deg)",
+            "z-index": "1"
+          });          
+        });
+        this.backElement.css({
+          transform: rotateAxis + "(-180deg)",
+          "z-index": "0"
+        });
+        this.backElement.hide("slow");
+      } else if (this.pos == 1){
+        that.frontElement.show(0, function(){
+          that.frontElement.css({
+            transform: rotateAxis + "(0deg)",
+            "z-index": "1"
+          });
+        });
+        this.middleElement.css({
+          transform: rotateAxis + "(-180deg)",
+          "z-index": "0"
+        });
+        this.middleElement.hide("slow");
+      }
+      this.pos += 1;
       this.flipDone(callback);
     },
 
     unflip: function(callback) {
-      if (!this.isFlipped) {
+      if (this.pos <= this.minPos) {
         return;
       }
 
       this.isFlipped = false;
-
+      var that = this;
       var rotateAxis = "rotate" + this.setting.axis;
-      this.frontElement.css({
-        transform: rotateAxis + "(0deg)",
-        "z-index": "1"
-      });
-
-      this.backElement.css({
-        transform: rotateAxis + (this.setting.reverse ? "(180deg)" : "(-180deg)"),
-        "z-index": "0"
-      });
+      if (this.pos == 1){
+        this.backElement.show(0, function(){
+          that.backElement.css({
+            transform: rotateAxis + "(0deg)",
+            "z-index": "1"
+          });
+        });
+        this.middleElement.css({
+          transform: rotateAxis + "(180deg)",
+          "z-index": "0"
+        });
+        this.middleElement.hide("slow");
+      } else if (this.pos == 2){
+        this.middleElement.show(0, function(){
+          that.middleElement.css({
+            transform: rotateAxis + "(0deg)",
+            "z-index": "1"
+          });          
+        });
+        this.frontElement.css({
+          transform: rotateAxis + "(180deg)",
+          "z-index": "0"
+        });
+        this.frontElement.hide("slow");
+      }
+      this.pos -= 1;
       this.flipDone(callback);
     },
 
@@ -146,6 +190,14 @@
         return this.setting.front;
       } else {
         return this.element.find(this.setting.front);
+      }
+    },
+
+    getMiddleElement: function() {
+      if (this.setting.middle instanceof $) {
+        return this.setting.middle;
+      } else {
+        return this.element.find(this.setting.middle);
       }
     },
 
@@ -160,7 +212,12 @@
     init: function(callback) {
       var self = this;
 
-      var faces = self.frontElement.add(self.backElement);
+      // TODO: 最大サイズに合わせる
+      // var faces = self.middleElement.add(self.frontElement);
+      var faces = self.middleElement.add([self.frontElement, self.backElement]);
+      // var faces2 = self.middleElement.add(self.backElement);
+      console.log(faces);
+
       var rotateAxis = "rotate" + self.setting.axis;
       var perspective = self.element["outer" + (rotateAxis === "rotatex" ? "Height" : "Width")]() * 2;
       var elementCss = {
@@ -168,19 +225,45 @@
         'position': 'relative'
       };
       var backElementCss = {
-        "transform": rotateAxis + "(" + (self.setting.reverse ? "180deg" : "-180deg") + ")",
+        "backface-visibility": "hidden",
+        "transform": rotateAxis + "(-180deg)",
         "z-index": "0",
-        "position": "relative"
+        "position": "absolute",
+        "top": "0%",
+        "left":"0%"
+      };
+      // 要修正
+      var frontElementCss = {
+        "backface-visibility": "hidden",
+        "transform": rotateAxis + "(180deg)",
+        "z-index": "0",
+        "position": "absolute",
+        "top": "0%",
+        "left": "0%"
       };
       var faceElementCss = {
         "backface-visibility": "hidden",
         "transform-style": "preserve-3d",
-        "position": "absolute",
+        "position": "middle",
         "z-index": "1"
       };
 
       if (self.setting.forceHeight) {
-        faces.outerHeight(self.element.height());
+        var frontHeight = faces[1].innerHeight();
+        var backHeight = faces[2].innerHeight();
+
+        if (frontHeight >= backHeight){
+          elementCss.height = frontHeight;
+          this.middleElement.css({
+            "height": frontHeight
+          });
+        } else {
+          elementCss.height = backHeight;   
+          this.middleElement.css({
+            "height": backHeight
+          });     
+        }
+        /*faces.outerHeight(self.element.height());*/
       } else if (self.setting.autoSize) {
         faceElementCss.height = '100%';
       }
@@ -204,6 +287,34 @@
 
       self.element.css(elementCss);
       self.backElement.css(backElementCss);
+      self.frontElement.css(frontElementCss);
+
+      /* Add aroows */
+      self.element.append('<div class="backwardArrow"><</div>');
+      self.element.append('<div class="forwardArrow">></div>');
+      var backwardArrowCss = {
+        "z-index": "2",
+        "position": "absolute",
+        "top": "40%",
+        "left": "-10%",
+        "color": "blue",
+        "opacity": "0.2",
+        "font-size": "50",
+        "cursor":"pointer"
+      };
+      var forwardArrowCss = {
+        "z-index": "2",
+        "position": "absolute",
+        "top": "40%",
+        "right": "-10%",
+        "text-align": "right",
+        "color": "blue",
+        "opacity": "0.2",
+        "font-size": "50",
+        "cursor":"pointer"
+      };
+      self.element.find('.backwardArrow').css(backwardArrowCss);
+      self.element.find('.forwardArrow').css(forwardArrowCss);
 
       // #39
       // not forcing width/height may cause an initial flip to show up on
@@ -217,6 +328,15 @@
         faces.css({
           "transition": "all " + speedInSec + "s ease-out"
         });
+        faces[1].css({
+          "transition": "all " + speedInSec + "s ease-out"
+        });
+        faces[2].css({
+          "transition": "all " + speedInSec + "s ease-out"
+        });
+        // faces2.css({
+        //   "transition": "all " + speedInSec + "s ease-out"
+        // });
 
         // This allows flip to be called for setup with only a callback (default settings)
         if (typeof callback === 'function') {
@@ -231,18 +351,42 @@
       self.attachEvents();
     },
 
+    /* Deprecated */
     clickHandler: function(event) {
       if (!event) { event = window.event; }
       if (this.element.find($(event.target).closest('button, a, input[type="submit"]')).length) {
         return;
       }
 
-      if (this.isFlipped) {
+      if (this.pos >= this.maxPos) {
         this.unflip();
       } else {
         this.flip();
       }
     },
+
+    clickHandlerForward: function(event) {
+      if (!event) { event = window.event; }
+      if (this.element.find($(event.target).closest('button, a, input[type="submit"]')).length) {
+        return;
+      }
+
+      if (this.pos < this.maxPos ) {
+        this.flip();
+      }
+    },
+
+    clickHandlerBackward: function(event) {
+      if (!event) { event = window.event; }
+      if (this.element.find($(event.target).closest('button, a, input[type="submit"]')).length) {
+        return;
+      }
+
+      if (this.pos > this.minPos) {
+        this.unflip();
+      }
+    },
+
 
     hoverHandler: function() {
       var self = this;
@@ -261,7 +405,9 @@
     attachEvents: function() {
       var self = this;
       if (self.setting.trigger === "click") {
-        self.element.on($.fn.tap ? "tap.flip" : "click.flip", $.proxy(self.clickHandler, self));
+        self.element.find('.backwardArrow').on($.fn.tap ? "tap.flip" : "click.flip", $.proxy(self.clickHandlerBackward, self));
+        self.element.find('.forwardArrow').on($.fn.tap ? "tap.flip" : "click.flip", $.proxy(self.clickHandlerForward, self));
+        /*self.element.on($.fn.tap ? "tap.flip" : "click.flip", $.proxy(self.clickHandler, self));*/
       } else if (self.setting.trigger === "hover") {
         self.element.on('mouseenter.flip', $.proxy(self.hoverHandler, self));
         self.element.on('mouseleave.flip', $.proxy(self.unflip, self));
@@ -300,6 +446,7 @@
         // This sets up the first flip in the new direction automatically
         var rotateAxis = "rotate" + self.setting.axis;
 
+        // 要修正
         if (self.isFlipped) {
           self.frontElement.css({
             transform: rotateAxis + (self.setting.reverse ? "(-180deg)" : "(180deg)"),
