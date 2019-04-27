@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--script src="../jquery-1.10.2.min.js"></script-->
-    <script src="../bower_components/jquery/dist/jquery.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="../src/flip.js"></script>
     <title>jQuery plugin</title>
     <style type="text/css">
@@ -12,12 +12,11 @@
       }
       .card {
         width: 100px;
-        height: 100px;
         margin: 20px;
         display: inline-block;
       }
       
-      .front, .back {
+      .front, .back, .middle {
         border: 2px gray solid;
         padding: 10px;
       }
@@ -34,6 +33,16 @@
       <div class="front">
           Front
       </div>
+      <div class="middle">
+          Middle<br>
+          Middle<br>
+          Middle<br>
+          Middle<br>
+          Middle<br>
+          Middle<br>
+          Middle<br>
+          Middle
+      </div>
       <div class="back">
           Back
       </div>
@@ -41,7 +50,18 @@
 
     <div id="card-2" class="card">
       <div class="front">
+          Front<br>
+          Front<br>
+          Front<br>
+          Front<br>
+          Front<br>
+          Front<br>
+          Front<br>
+          Front<br>
           Front
+      </div>
+      <div class="middle">
+          Middle
       </div>
       <div class="back">
           Back
@@ -52,95 +72,28 @@
       <div class="front">
           Front
       </div>
+      <div class="middle">
+          Middle
+      </div>
       <div class="back">
+          Back<br>
+          Back<br>
+          Back<br>
+          Back<br>
+          Back<br>
+          Back<br>
+          Back<br>
           Back
       </div> 
     </div>
+
 
     <div class="card">
       <div class="front">
           Front
       </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
-      </div>
-      <div class="back">
-          Back
-      </div> 
-    </div>
-
-    <div class="card">
-      <div class="front">
-          Front
+      <div class="middle">
+          Middle
       </div>
       <div class="back">
           Back
@@ -149,7 +102,9 @@
     <script type="text/javascript">
     $(function(){
       $(".card").flip({
-        trigger: "hover"
+        trigger: "click",
+        autoSize: false,
+        forceHeight: true
       });
     });
     </script>
